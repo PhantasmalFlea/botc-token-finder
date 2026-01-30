@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/5/w3.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+    body,html{
+        background-color:paper;
+    }
+    textarea{
+        height: 10em;
+    }
+</style>
+<title>Setup Assistant</title>
+<script>
+let rolesList;
+fetch("./rolesSetup.json")
+    .then((response) => response.json())
+    .then((json) => {
+        document.getElementById("pageLoading").classList.toggle("w3-hide")
+        document.getElementById("scriptEntry").classList.toggle("w3-hide")
+        rolesList = json
+    })
+
+function getTheScriptAndRun(){
+    let ustb = document.getElementById("usersScript")
+    try{
+        let script = JSON.parse(ustb.value)
+        ustb.classList.add("w3-success");
+        findTokens(script)
+        .then(() => {
+            document.getElementById("scriptEntry").classList.toggle("w3-hide")
+            
+            if(document.getElementById("troublebrewed").children.length)
+            document.getElementById("section-tb").classList.toggle("w3-hide")
+
+            if(document.getElementById("baddestmoon").children.length)
+                document.getElementById("section-bmr").classList.toggle("w3-hide")
+
+            if(document.getElementById("cryingbaby").children.length)
+                document.getElementById("section-sav").classList.toggle("w3-hide")
+
+            if(document.getElementById("roundandroundwego").children.length)
+                document.getElementById("section-car").classList.toggle("w3-hide")
+        })
+    }
+    catch(err){
+        ustb.classList.add("w3-warning")
+        document.getElementById("ustbInfo").innerText = "That's not a valid Script JSON! Try again! Paste your script into the box below."
+        setTimeout(() => {ustb.classList.remove("w3-warning");}, 1e3);
+    }
+}
+
+function getTheName(c, i, a){
+    return (c.id==this)?c.name:false;
+}
+
+async function findTokens(theScript){
+    for(let i in theScript){
+        if(theScript[i].id == "_meta"){
+            try{
+                document.getElementById("nameOfTheScript").innerText = theScript[i].name;
+                document.getElementById("scriptAuthor").innerText = `A script by ${theScript[i].author}`;
+            }
+            catch(e){} //Fail silently. For some reason, some scripts don't either of these listed.
+            continue;
+        }
+
+        if(typeof theScript[i] == "object"){
+            try{
+                theScript[i] = theScript[i].id;
+            }
+            catch{
+                console.debug("No ID found.",theScript[i])
+                continue;
+            }
+        }
+        
+        let roleName = rolesList.find(getTheName, theScript[i]).name
+
+        let bg = document.createElement("div")
+        bg.classList.add("w3-round", "w3-card", "w3-white", "w3-border");
+        
+        //TODO: A progress bar for the number of reminders to make sure you have them all.
+        // let pb = document.createElement("div")
+        // pb.classList.add("w3-container", "w3-round", "w3-text-normal")
+        // pb.style.width="0%"
+        // pb.style.height="1em"
+
+        let txt = document.createElement("p")
+        txt.appendChild(document.createTextNode(roleName))
+        txt.classList.add("w3-panel", "w3-bold")
+
+        bg.onclick=function(){
+            let t = this
+            console.log(t.classList, t.classList.contains("w3-warning"))
+            if(t.classList.contains("w3-warning")){
+                console.log("Warning")
+                t.classList.toggle("w3-warning")
+                t.classList.toggle("w3-success")
+            }else if (t.classList.contains("w3-success")){
+                console.log("success")
+                t.classList.toggle("w3-success")
+            }else{
+                console.log("Nope.")
+                t.classList.toggle("w3-warning")
+            }
+        };
+//        bg.appendChild(pb);
+        bg.appendChild(txt)
+        let el = bg
+
+        switch(rolesList.find(getTheName, theScript[i]).stored){
+            case "tb":
+                document.getElementById("troublebrewed").appendChild(el);
+                break;
+            case "bmr":
+                document.getElementById("baddestmoon").appendChild(el)
+                break;
+            case "sav":
+                document.getElementById("cryingbaby").appendChild(el)
+                break;
+            default:
+                document.getElementById("roundandroundwego").appendChild(el)
+                break;
+        }
+    }
+    return true;
+}
+</script>
+</head>
+<body class="w3-container">
+    <section class="w3-panel w3-light-grey w3-topbar w3-border-dark-grey">
+        <h1 id="nameOfTheScript"> Token Finder </h1>
+        <p class="w3-italic" id="scriptAuthor"></p>
+    </section>
+
+    <div id="pageLoading" class="w3-panel w3-khaki w3-bottombar w3-border-yellow">
+        <h3>Loading...</h3>
+        <p>Loading role information, please wait!</p>
+    </div>
+
+    <div class="w3-card w3-grey w3-hide w3-bottombar w3-border-black" id="scriptEntry">
+        <h2 class="w3-panel w3-black"> Your Script </h2>
+        <p class="w3-panel" id="ustbInfo"> Paste your script into the box below, and I'll get that checked out!</p>
+        <form class="w3-panel" onsubmit="grabTheScriptAndRun(); return false;">
+            <textarea class="w3-input w3-rounder" id="usersScript" name="usersScript"></textarea>
+            <button type="button" onclick="getTheScriptAndRun()" class="w3-button w3-white w3-round w3-hover-black">Load the script!</button>
+        </form>
+    </div>
+    <section class="w3-card w3-hide w3-bottombar w3-border-red" style="background-color: #ffcccc" id="section-tb">
+        <h2 class="w3-red w3-panel"> Trouble Brewing </h2>
+        <div class="w3-flex w3-panel" style="flex-wrap: wrap" id="troublebrewed"></div>
+    </section>
+    <section class="w3-card w3-hide w3-bottombar w3-border-orange" style="background-color: #ffedcc" id="section-bmr">
+        <h2 class="w3-orange w3-panel"> Bad Moon Rising </h2>
+        <div class="w3-flex w3-panel" style="flex-wrap: wrap" id="baddestmoon"></div>
+    </section>
+    <section class="w3-card w3-hide w3-bottombar w3-border-purple" style="background-color: #ffb3ff" id="section-sav">
+        <h2 class="w3-purple w3-panel"> Sects & Violets </h2>
+        <div class="w3-flex w3-panel" style="flex-wrap: wrap" id="cryingbaby"></div>
+    </section>
+    <section class="w3-card w3-hide w3-bottombar w3-border-black" id="section-car">
+        <h2 class="w3-panel"> Carousel/Experimental </h2>
+        <div class="w3-flex w3-panel" style="flex-wrap: wrap" id="roundandroundwego"></div>
+    </section>
+    <footer class="w3-panel w3-light-grey w3-bottombar w3-border-dark-grey">Made by Phantasmal Flea, <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">W3 CSS</a> by w3schools.com</footer>
+</body>
+</html>
