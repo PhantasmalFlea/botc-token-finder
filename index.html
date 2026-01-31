@@ -76,7 +76,12 @@ async function findTokens(theScript){
             }
         }
         
-        let roleName = rolesList.find(getTheName, theScript[i]).name
+        let roleName;
+        try{roleName = rolesList.find(getTheName, theScript[i]).name}
+        catch(e){
+            console.debug(`No such role: ${theScript[i]}`)
+            continue;
+        }
 
         let bg = document.createElement("div")
         bg.classList.add("w3-display-container", "w3-card", "w3-round", "w3-white", "w3-border");
