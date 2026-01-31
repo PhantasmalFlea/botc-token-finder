@@ -79,35 +79,28 @@ async function findTokens(theScript){
         let roleName = rolesList.find(getTheName, theScript[i]).name
 
         let bg = document.createElement("div")
-        bg.classList.add("w3-round", "w3-card", "w3-white", "w3-border");
-        
+        bg.classList.add("w3-display-container", "w3-card", "w3-round", "w3-white", "w3-border");
+        bg.style.minWidth="min(75px,fit-content)";
+        bg.style.minHeight="min(fit-content,5rem)";
+
         //TODO: A progress bar for the number of reminders to make sure you have them all.
-        // let pb = document.createElement("div")
-        // pb.classList.add("w3-container", "w3-round", "w3-text-normal")
-        // pb.style.width="0%"
-        // pb.style.height="1em"
+        let pb = document.createElement("div")
+        pb.classList.add("w3-round", "w3-success", "w3-display-left")
+        pb.style.width="0%"
+        pb.style.height="1rem"
+        pb.appendChild(document.createTextNode(""))
 
         let txt = document.createElement("p")
         txt.appendChild(document.createTextNode(roleName))
-        txt.classList.add("w3-panel", "w3-bold")
+        txt.classList.add("w3-bold")
+        txt.style.margin="15px";
 
-        bg.onclick=function(){
-            let t = this
-            console.log(t.classList, t.classList.contains("w3-warning"))
-            if(t.classList.contains("w3-warning")){
-                console.log("Warning")
-                t.classList.toggle("w3-warning")
-                t.classList.toggle("w3-success")
-            }else if (t.classList.contains("w3-success")){
-                console.log("success")
-                t.classList.toggle("w3-success")
-            }else{
-                console.log("Nope.")
-                t.classList.toggle("w3-warning")
-            }
-        };
-//        bg.appendChild(pb);
-        bg.appendChild(txt)
+        bg.setAttribute("data-reminders",Number(rolesList.find(getTheName, theScript[i]).reminders)+1) //+1 to offset for the token itself.
+        bg.setAttribute("data-obtained",0)
+
+        bg.onclick=function(){incrementProgressBar(this)}
+        bg.appendChild(pb);
+        bg.appendChild(txt);
         let el = bg
 
         switch(rolesList.find(getTheName, theScript[i]).stored){
@@ -126,6 +119,27 @@ async function findTokens(theScript){
         }
     }
     return true;
+}
+
+function incrementProgressBar(el){
+    let reminders = el.getAttribute("data-reminders");
+    let soFar = el.getAttribute("data-obtained");
+    soFar++;
+    if(soFar == reminders){
+        el.firstChild.style.width=0;
+        el.classList.remove("w3-warning")
+        el.classList.add("w3-success")
+    }
+    else if(soFar > reminders){
+        el.classList.remove("w3-success")
+        soFar = 0;
+    }
+    else {
+        el.firstChild.style.width=`${((soFar-1)/(reminders-1))*100}%`;
+        if(!el.classList.contains("w3-warning"))
+            el.classList.add("w3-warning")
+    }
+    el.setAttribute("data-obtained",soFar)
 }
 </script>
 </head>
